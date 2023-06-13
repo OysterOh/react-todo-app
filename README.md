@@ -1,5 +1,6 @@
+<img src="https://img.shields.io/badge/Visual Studio Code-007ACC?style=flat&logo=Visual Studio Code&logoColor=white" />
 
-#react project 시작
+# react project 시작
 
 1. node.js 설치 (LTS ver)
 
