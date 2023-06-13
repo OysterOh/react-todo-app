@@ -11,7 +11,7 @@ const TodoInput = () => {
             </form>
         </div>
 
-        <button className='insert-btn'>
+        <button className='insert-btn open'>
             <MdAdd />
         </button>
     </>
