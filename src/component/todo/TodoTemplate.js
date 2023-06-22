@@ -14,10 +14,10 @@ const TodoTemplate = () => {
   const [todos, setTodos] = useState([]);
 
   //id값 시퀀스 생성 함수
-  const makeNewId = () => {
-    if(todos.length === 0) return 1;
-    return todos[todos.length - 1].id + 1;
-  }
+  // const makeNewId = () => {
+  //   if(todos.length === 0) return 1;
+  //   return todos[todos.length - 1].id + 1;
+  // }
 
   //todoInput에게 todoText를 받아오는 함수
   //자식 컴포넌트가 부모 컴포넌트에게 데이터를 전달할 때는 props 사용이 불가능
@@ -108,7 +108,7 @@ const TodoTemplate = () => {
     fetch(API_BASE_URL)
     .then(res => res.json())
     .then(json => {
-      console.log(json.todos);
+      console.log("json.todos: ", json.todos);
 
       //fetch를 통해 받아온 데이터를 상태 변수에 할당한다.
       setTodos(json.todos);
