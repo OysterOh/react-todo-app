@@ -1,10 +1,18 @@
 import React, { useState } from 'react'
 import {Button, Container, Grid,
     TextField, Typography, Link} from "@mui/material";
-import { red } from '@mui/material/colors';
+
+//리다이렉트 사용하기
+import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL as BASE, USER } from '../../config/host-config';
 
 const Join = () => {
 
+    //리다이렉트 사용하기
+    const redirection = useNavigate();
+
+    const API_BASE_URL = BASE + USER;
+    
     //상태변수로 회원가입 입력값 관리
     const [userValue, setUserValue] = useState({
         userName: '',
@@ -28,74 +36,163 @@ const Join = () => {
         email: false
     });
 
-    //검증 데이터를 상태변수에 저장하는 함수
+   //검증 데이터를 상태변수에 저장하는 함수
     const saveInputState = ({key, inputVal, flag, msg}) =>{
         
-        inputVal !== 'pass' && setUserValue({
-            ...userValue,
-            //  ...XXXX 를 복사하는데 그 중 YY는 ZZ로 한다.
-            // 다른 값들은 유지하고 userName(key)은 inputVal로 한다.
-            [key]: inputVal
+    inputVal !== 'pass' && setUserValue({
+        ...userValue,
+        //  ...XXXX 를 복사하는데 그 중 YY는 ZZ로 한다.
+        // 다른 값들은 유지하고 userName(key)은 inputVal로 한다.
+        [key]: inputVal
         });
 
         setMessage({
             ...message,
             [key]: msg
-        })
-        
+        });
+
         setCorrect({
             ...correct,
             [key]: flag
         });
+
     }
+
+
 
     //이름 입력창 체인지 이벤트 핸들러
     const nameHandler = e => {
 
         const nameRegex = /^[가-힣]{2,5}$/;
+        
         const inputVal = e.target.value;
-
         //입력값 검증
-        let msg;    //검증 메세지를 저장할 변수
-        let flag = false;;   //입력값 검증 체크 변수
+        let msg; //검증 메세지를 저장할 변수
+        let flag = false; //입력값 검증 체크 변수
+        
         if(!inputVal) {
             msg = '유저 이름은 필수입니다.';
         } else if(!nameRegex.test(inputVal)) {
-            msg = '2~5글자 사이의 한글로 작성하세요.';
+            msg = '2~5글자 사이의 한글로 작성하세요!';
         } else {
             msg = '사용 가능한 이름입니다.';
             flag = true;
         }
 
-        //객체 프로퍼티에 세팅하는 변수의 이름이 키값과 동일한 경우 콜론 생략 가능
+        //객체 프로퍼티에 세팅하는 변수의 이름이 키값과 동일한 경우
+        //콜론 생략이 가능.
         saveInputState({
             key: 'userName',
             inputVal,
             msg,
             flag
         });
-
         
-        //입력한 값을 상태변수에 저장
+     //입력한 값을 상태변수에 저장
         // console.log(e.target.value);
         
     };
 
+    // 이메일 중복체크 서버 통신 함수
+    const fetchDuplicateCheck = email => {
+
+        let msg = '', flag = false;
+        fetch(`${API_BASE_URL}/check?email=${email}`)
+            .then(res => {
+                if(res.status === 200) {
+                    return res.json();
+                }
+            })
+            .then(json => {
+                console.log(json);
+                if(json) {
+                    msg = '이메일이 중복되었습니다!';
+                } else {
+                    msg = '사용 가능한 이메일 입니다.';
+                    flag = true;
+                }
+
+                setUserValue({...userValue, email: email});
+                setMessage({...message, email: msg});
+                setCorrect({...correct, email: flag});
+            })
+            .catch(err => {
+                console.log('서버 통신이 원활하지 않습니다.');
+            });
+    };
+
+
+
     //이메일 입력창 체인지 이벤트 핸들러
     const emailHandler = e => {
 
-        //입력한 값을 상태변수에 저장
-        // console.log(e.target.value);
-        
         const inputVal = e.target.value;
 
-        setUserValue({
-            ...userValue,
-            //  ...XXXX 를 복사하는데 그 중 YY는 ZZ로 한다.
-            // 다른 값들은 유지하고 userName은 inputVal로 한다.
-            email: inputVal
+        const emailRegex = /^[a-z0-9\.\-_]+@([a-z0-9\-]+\.)+[a-z]{2,6}$/;
+
+        let msg, flag = false;
+        if(!inputVal) {
+            msg = '이메일은 필수값입니다.';
+        } else if(!emailRegex.test(inputVal)) {
+            msg = '이메일 형식이 아닙니다.';
+        } else {
+            //이메일 중복 체크
+            fetchDuplicateCheck(inputVal);
+            return;
+        }
+
+        saveInputState({
+            key: 'email',
+            inputVal,
+            msg,
+            flag
         });
+
+    };
+
+
+    /*
+    const fetchDuplicateCheck = async email => {
+
+        const res = await fetch(`${API_BASE_URL}/check?email=${email}`);
+        const data = await res.json();
+        console.log(data);
+        return data;
+
     }
+
+    const emailHandler = async e => {
+        const inputVal = e.target.value;
+
+        const emailRegex = /^[a-z0-9\.\-_]+@([a-z0-9\-]+\.)+[a-z]{2,6}$/;
+
+        let msg;
+        let flag = false;
+        if(!inputVal) {
+            msg = '이메일은 필수입니다';
+        } else if(!emailRegex.test(inputVal)){
+            msg = '이메일 형식이 아닙니다';
+        } else if(await fetchDuplicateCheck(inputVal)){
+            msg = '사용중인 이메일 입니다';
+        } else {
+            msg = '사용 가능한 이메일 입니다';
+            flag = true;
+        }
+
+        saveInputState({inputVal,flag,msg,key:'email'});
+    }
+     */
+
+
+
+
+    // setUserValue({
+        //     ...userValue,
+        //     //  ...XXXX 를 복사하는데 그 중 YY는 ZZ로 한다.
+        //     // 다른 값들은 유지하고 userName은 inputVal로 한다.
+        //     email: inputVal
+        // });
+    
     
     //비밀번호 입력창 체인지 이벤트 핸들러
     const passwordHandler = e => {
@@ -107,37 +204,28 @@ const Join = () => {
         setMessage({...message, passwordCheck: ''});
         setCorrect({...correct, passwordCheck: false});
 
-        //입력한 값을 상태변수에 저장
-        // console.log(e.target.value);
-        
+
         const inputVal = e.target.value;
 
         const pwRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,20}$/;
-        
+
         //검증 시작
         let msg, flag = false;
-        if(!inputVal) {   //패스워드 안적음
-            msg = '비밀번호는 필수입니다.'
+        if(!inputVal) { //패스워드 안적음.
+            msg = '비밀번호는 필수입니다.';
         } else if(!pwRegex.test(inputVal)) {
-            msg = '8글자 이상의 영문, 숫자, 특수문자를 포함해 주세요.'
+            msg = '8글자 이상의 영문, 숫자, 특수문자를 포함해 주세요.';
         } else {
-            msg = '사용 가능한 비밀번호입니다.'
+            msg = '사용 가능한 비밀번호입니다.';
             flag = true;
         }
 
         saveInputState({
-            key: 'password', 
+            key: 'password',
             inputVal,
-            msg, 
+            msg,
             flag
-        });
-
-        // setUserValue({
-        //     ...userValue,
-        //     //  ...XXXX 를 복사하는데 그 중 YY는 ZZ로 한다.
-        //     // 다른 값들은 유지하고 userName은 inputVal로 한다.
-        //     password: inputVal
-        // });
+        });       
     };
 
     const pwCheckHandler = e => {
@@ -155,18 +243,57 @@ const Join = () => {
         saveInputState({
             key: 'passwordCheck',
             inputVal: 'pass',
-            msg, 
+            msg,
             flag
         });
+
     }
 
+    // 4개의 입력칸이 모두 검증에 통과했는지 여부를 검사
+    const isValid = () => {
+
+        for(const key in correct) {
+            const flag = correct[key];
+            if(!flag) return false;
+        }
+        return true;
+    }
+
+    //회원 가입 처리 서버 요청
+    const fetchSignUpPost = () => {
+        fetch(API_BASE_URL, {
+            method: 'POST',
+            headers: {'content-type' : 'application/json'},
+            body: JSON.stringify(userValue)
+        })
+        .then(res => {
+            if(res.status === 200) {
+                alert('회원가입에 성공했습니다!');
+                //로그인 페이지로 리다이렉트
+                // window.location.href = '/login';
+                redirection('/login');
+            } else {
+                alert('서버와의 통신이 원활하지 않습니다.');
+            }
+        })
+    }
+
+
+    // 회원가입 버튼 클릭 이벤트 핸들러
     const joinButtonClickHandler = e => {
         
         e.preventDefault();
 
-        console.log(userValue);
-        //{userName: '', passWord: '', email: ''}
+        //회원 가입 서버 요청
+        if(isValid()) {
+            fetchSignUpPost();
+        } else {
+            alert('입력란을 다시 확인해 주세요!');
+        }
     }
+
+
+
     return (
         <Container component="main" maxWidth="xs" style={{ margin: "200px auto" }}>
             <form noValidate>
@@ -190,8 +317,8 @@ const Join = () => {
                         />
                         <span style={
                             correct.userName
-                            ? {color: 'green'}  // O
-                            : {color: 'red'}    // X
+                            ? {color : 'green'}
+                            : {color : 'red'}
                         }>{message.userName}</span>
                     </Grid>
                     <Grid item xs={12}>
@@ -207,8 +334,8 @@ const Join = () => {
                         />
                         <span style={
                             correct.email
-                            ? {color: 'green'}  // O
-                            : {color: 'red'}    // X
+                            ? {color : 'green'}
+                            : {color : 'red'}
                         }>{message.email}</span>
                     </Grid>
                     <Grid item xs={12}>
@@ -225,8 +352,8 @@ const Join = () => {
                         />
                         <span style={
                             correct.password
-                            ? {color: 'green'}  // O
-                            : {color: 'red'}    // X
+                            ? {color : 'green'}
+                            : {color : 'red'}
                         }>{message.password}</span>
                     </Grid>
     
@@ -241,12 +368,11 @@ const Join = () => {
                             id="password-check"
                             autoComplete="check-password"
                             onChange={pwCheckHandler}
-    
                         />
                         <span id='check-span' style={
                             correct.passwordCheck
-                            ? {color: 'green'}  // O
-                            : {color: 'red'}    // X
+                            ? {color : 'green'}
+                            : {color : 'red'}
                         }>{message.passwordCheck}</span>
                     </Grid>
     
@@ -271,7 +397,8 @@ const Join = () => {
                 </Grid>
             </form>
         </Container>
-        );
+    );
+
 }
 
 export default Join
