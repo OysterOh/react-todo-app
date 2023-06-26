@@ -2,8 +2,11 @@ import React from 'react'
 import {Button, Container, Grid,
     TextField, Typography, Link} from "@mui/material";
 import { API_BASE_URL as BASE, USER } from '../../config/host-config';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
+
+    const redirection = useNavigate({});
     
     const REQUEST_URL = BASE + USER + '/signin';
 
@@ -34,8 +37,19 @@ const Login = () => {
             return;
         }
 
-        const json = await res.json();
-        console.log(json);
+        const { token, userName, email, role } = await res.json();
+        // console.log(json);
+        //홈으로 리다이렉트
+        
+        //json에 담긴 인증정보를 클라이언트에 보관
+        // 1. 로컬 스토리지 - 브라우저가 종료되어도 보관됨
+        // 2. 세션 스토리지 - 브라우저가 종료되면 사라짐
+        localStorage.setItem('ACCESS_TOKEN', token);
+        localStorage.setItem('LOGIN_USERNAME', userName);
+        localStorage.setItem('USER_ROLE', role);
+        
+        redirection('/');
+        
         // fetch(REQUEST_URL, {
         //     method: 'POST',
         //     headers: {'content-type' : 'application/json'},
