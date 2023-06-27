@@ -11,7 +11,7 @@ const Login = () => {
     const redirection = useNavigate();
 
     //AuthContext에서 onLogin 함수를 가져온다.
-    const {onLogin} =  useContext(AuthContext);
+    const {onLogin, isLoggedIn} =  useContext(AuthContext);
 
     const REQUEST_URL = BASE + USER + '/signin';
 
@@ -48,9 +48,6 @@ const Login = () => {
         //json에 담긴 인증정보를 클라이언트에 보관
         // 1. 로컬 스토리지 - 브라우저가 종료되어도 보관됨.
         // 2. 세션 스토리지 - 브라우저가 종료되면 사라짐.
-        localStorage.setItem('ACCESS_TOKEN', token);
-        localStorage.setItem('LOGIN_USERNAME', userName);
-        localStorage.setItem('USER_ROLE', role);
         
         //Context API를 사용하여 로그인 상태를 업데이트한다.
         onLogin(token, userName, role);
@@ -85,11 +82,8 @@ const Login = () => {
     const loginHandler = e => {
         e.preventDefault();
 
-        
-
         // 서버에 로그인 요청 전송
         fetchLogin();
-
     }
 
     return (
