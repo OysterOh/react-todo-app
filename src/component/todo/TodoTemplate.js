@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import TodoHeader from './TodoHeader';
 import TodoMain from './TodoMain';
 import TodoInput from './TodoInput';
 import './scss/TodoTemplate.scss'
-import { API_BASE_URL as BASE, TODO } from '../../config/host-config';
+import { API_BASE_URL as BASE, TODO, USER } from '../../config/host-config';
 import { json } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { Spinner } from 'reactstrap';
 import { getLoginUserInfo } from '../../util/login-utils';
+import AuthContext from '../../util/AuthContext';
 const TodoTemplate = () => {
 
   //로딩 상태값 관리
@@ -15,8 +16,10 @@ const TodoTemplate = () => {
 
   const redirection = useNavigate();
 
+  const {setUserInfo } = useContext(AuthContext);
+
   //로그인 인증 토큰 받아오기
-  const { token } = getLoginUserInfo();
+  const { token, setToken } = useState(getLoginUserInfo().token);
 
   //요청 헤더 설정
   const requestHeader = {
@@ -26,6 +29,7 @@ const TodoTemplate = () => {
 
   //서버에 할 일 목록(json)을 요청(fetch)해서 받아와야 한다.
   const API_BASE_URL = BASE + TODO;
+  const API_USER_URL = BASE + USER;
 
   //todos 배열을 상태 관리
   const [todos, setTodos] = useState([]);
@@ -64,9 +68,14 @@ const TodoTemplate = () => {
       headers :requestHeader,
       body : JSON.stringify(newTodo)
     })
-    .then(res => res.json())
+    .then(res => {
+      if(res.status === 200) return res.json();
+      else if (res.status === 401) {
+        alert('일반회원은 일정 등록이 5개로 제한된다.');
+      }
+    })
     .then(json => {
-      setTodos(json.todos);
+      if(json) setTodos(json.todos);
     })
   }
 
@@ -120,6 +129,30 @@ const TodoTemplate = () => {
     return todos.filter(todo => !todo.done).length;
   }
 
+  //비동기 방식 등급 승격 함수
+  const fetchPromote = async() => {
+    const res = await fetch(API_USER_URL + '/promote', {
+      method: 'PUT',
+      headers: requestHeader
+    });
+
+    if(res.status === 403) {
+      alert('이미 프리미엄 회원입니다.');
+    } else if(res.status === 200) {
+      const json = await res.json();
+      console.log(json);
+      setUserInfo(json);
+      // setToken(json); //
+    }
+  }
+
+  //등급 승격 서버 요청(프리미엄)
+  const promote = () => {
+    console.log('등급 승격 서버 요청');
+    fetchPromote();
+  }
+
+
   useEffect(() => {
     // 페이지가 렌더링 됨과 동시에 할 일 목록을 요청해서 뿌려준다. 
     fetch(API_BASE_URL, {
@@ -153,7 +186,9 @@ const TodoTemplate = () => {
   //
   const loadEndedPage = (
     <>
-      <TodoHeader count={countRestTodo} />  {/*호출구역*/}
+      <TodoHeader 
+      count={countRestTodo} 
+      promote={promote}/>  {/*호출구역*/}
         <TodoMain 
           todoList={todos} 
           remove={removeTodo} 
