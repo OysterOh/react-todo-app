@@ -18,6 +18,15 @@ const Join = () => {
     const redirection = useNavigate();
     const {isLoggedIn} = useContext(AuthContext);
     const [open, setOpen] = useState(false);
+    
+    useEffect(() => {
+        if (isLoggedIn) {
+            setOpen(true);
+            setTimeout(() => {
+                redirection('/');
+            }, 3000);
+        }
+    }, [isLoggedIn, redirection]);
 
     const API_BASE_URL = BASE + USER;
     
@@ -294,7 +303,7 @@ const Join = () => {
 
         //FormData 객체를 활용해서 이미지파일과 회원정보 JSON을 하나로 묶어야 한다.
         const userFormData = new FormData();
-        userFormData.append('user', JSON.stringify(userValue));
+        userFormData.append('user', userJsonBlob);
                             /////UserController.java @RequestPart("")
         userFormData.append('profileImage', $fileTag.current.files[0]);
         
@@ -327,16 +336,6 @@ const Join = () => {
             alert('입력란을 다시 확인해 주세요!');
         }
     }
-
-    useEffect(() => {
-        if (isLoggedIn) {
-            setOpen(true);
-            setTimeout(() => {
-                redirection('/');
-            }, 3000);
-        }
-    }, [isLoggedIn, redirection]);
-
 
     return (
         <>
