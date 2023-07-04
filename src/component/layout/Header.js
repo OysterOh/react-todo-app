@@ -9,7 +9,7 @@ import { API_BASE_URL, USER } from '../../config/host-config';
 
 const Header = () => {
 
-    const profileRequestURL = `${API_BASE_URL}${USER}/load-profile`;
+    const profileRequestURL = `${API_BASE_URL}${USER}/load-s3`;
 
     const redirection = useNavigate({});
 
@@ -34,11 +34,16 @@ const Header = () => {
 
         if (res.status === 200) {
             //서버에서는 직렬화된 이미지가 응답된다.
-            const profileBlob = await res.blob();
+            const imgUrl = await res.text();
+            setProfileUrl(imgUrl);
             
+
+            /*
+            const profileBlob = await res.blob();
             //해당 이미지를 imgUrl로 변경
             const imgUrl = window.URL.createObjectURL(profileBlob);
             setProfileUrl(imgUrl);
+            */
         } else {
             const err = await res.text();
             setProfileUrl(null);
